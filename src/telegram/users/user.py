@@ -51,14 +51,11 @@ async def process_action(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Form.user_action)
 async def process_client_action(message: types.Message, state: FSMContext):
     if message.text == "Создать":
-        action = message.text.lower()
-        await start_user_data_collection(message, state, action)
+        await start_user_data_collection(message, state)
     elif message.text == "Изменить":
         await message.answer("Введите ID клиента, которого нужно изменить.")
-        action = message.text.lower()
         await message.answer("Введите данные клиента.")
-        await start_user_data_collection(message, state, action)
-        await state.finish()
+        await start_user_data_collection(message, state)
     elif message.text == "Найти":
         await message.answer("Введите данные для поиска клиента.")
         period = message.text
