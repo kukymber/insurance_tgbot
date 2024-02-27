@@ -4,10 +4,10 @@ from enum import Enum
 
 
 class InsuranceInfoEnum(Enum):
-    Osago = "ОСАГО"
-    Mortgage = "Ипотека"
-    Selfinsurance = "Личное страхование"
-    Other = "Другой вид"
+    osago = "ОСАГО"
+    mortgage = "Ипотека"
+    selfinsurance = "Личное страхование"
+    other = "Другой вид"
 
 
 def validate_name(name: str):

@@ -98,10 +98,13 @@ async def process_time_insure_end(message: types.Message, state: FSMContext):
 
 
 async def process_polis_type(callback_query: types.CallbackQuery, state: FSMContext):
-    polis_type = callback_query.data
-    await state.update_data(polis_type=polis_type)
-    await bot.answer_callback_query(callback_query.id, text=callback_query.data)
-    await callback_query.message.edit_text(f"Вы выбрали тип полиса: {polis_type}\nВведите какие-либо важные данные по полису", reply_markup=None)
+    polis_type_key = callback_query.data
+    polis_type = InsuranceInfoEnum[polis_type_key]
+    await state.update_data(polis_type=polis_type.value)
+    await bot.answer_callback_query(callback_query.id, text=polis_type.value)
+    await callback_query.message.edit_text(
+        f"Вы выбрали тип полиса: {polis_type.value}\nВведите какие-либо важные данные по полису", reply_markup=None)
+    await UserDataState.process_description.set()
     await UserDataState.process_description.set()
 
 
