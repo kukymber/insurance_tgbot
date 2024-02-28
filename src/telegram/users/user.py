@@ -1,11 +1,10 @@
 import httpx
 from aiogram import types, Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from src.core.engine import dp, bot, TELEGRAM_CHAT_ID, API_URL
-from src.telegram.users.user_actions import start_user_data_collection, UserDataState
+from src.telegram.users.user_actions import start_user_data_collection
 
 
 async def send_to_admin(dp):
@@ -72,14 +71,10 @@ async def process_client_action(message: types.Message, state: FSMContext):
         await state.finish()
 
 
-@dp.message_handler(lambda message: message.text.lower() == "назад", state=UserDataState.all_states)
-async def process_back(message: types.Message, state: FSMContext):
-    await state.set_state(UserDataState.previous_state)
-    await message.answer("Вы вернулись на предыдущий шаг.")
+
 
 
 def register_user_handlers(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands=['start'], state='*')
     dp.register_message_handler(process_action, state=Form.action)
     dp.register_message_handler(process_client_action, state=Form.user_action)
-    dp.register_message_handler(process_back, state="*")
