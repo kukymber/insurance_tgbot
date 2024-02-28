@@ -5,12 +5,16 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from src.core.engine import dp, bot, TELEGRAM_CHAT_ID, API_URL
-from src.telegram.users.user_actions import start_user_data_collection
+from src.telegram.users.user_actions import start_user_data_collection, UserDataState
+
+
 async def send_to_admin(dp):
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text='Бот запущен')
 
+
 class SearchForm(StatesGroup):
-    query = State()  # Состояние для сохранения запроса
+    query = State()
+
 
 class Form(StatesGroup):
     action = State()
@@ -19,7 +23,6 @@ class Form(StatesGroup):
     create_user = State()
     update_user = State()
     find_user = State()
-
 
 
 # Команда start
@@ -48,6 +51,7 @@ async def process_action(message: types.Message, state: FSMContext):
         await message.answer("Выберите действие с отчетом:", reply_markup=markup)
         pass  # логика вызова report.py
 
+
 @dp.message_handler(state=Form.user_action)
 async def process_client_action(message: types.Message, state: FSMContext):
     if message.text == "Создать":
@@ -68,11 +72,14 @@ async def process_client_action(message: types.Message, state: FSMContext):
         await state.finish()
 
 
+@dp.message_handler(lambda message: message.text.lower() == "назад", state=UserDataState.all_states)
+async def process_back(message: types.Message, state: FSMContext):
+    await state.set_state(UserDataState.previous_state)
+    await message.answer("Вы вернулись на предыдущий шаг.")
+
+
 def register_user_handlers(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands=['start'], state='*')
     dp.register_message_handler(process_action, state=Form.action)
     dp.register_message_handler(process_client_action, state=Form.user_action)
-
-
-
-
+    dp.register_message_handler(process_back, state="*")

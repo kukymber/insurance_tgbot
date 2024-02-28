@@ -20,6 +20,10 @@ class UserDataState(StatesGroup):
     time_insure_end = State()
     polis_type = State()
     process_description = State()
+    @classmethod
+    def set_previous(cls, current_state, previous_state):
+        cls.previous_state = previous_state
+
 
 
 async def start_user_data_collection(message: types.Message, state: FSMContext):
@@ -37,6 +41,7 @@ async def process_first_name(message: types.Message, state: FSMContext):
         return
     await state.update_data(first_name=result)
     await message.answer("Введите отчество клиента:")
+    UserDataState.set_previous(current_state=UserDataState.middle_name, previous_state=UserDataState.first_name)
     await UserDataState.next()
 
 
@@ -47,7 +52,7 @@ async def process_middle_name(message: types.Message, state: FSMContext):
         return
     await state.update_data(middle_name=result)
     await message.answer("Введите Фамилию клиента:")
-
+    UserDataState.set_previous(current_state=UserDataState.last_name, previous_state=UserDataState.middle_name)
     await UserDataState.next()
 
 
@@ -58,6 +63,7 @@ async def process_last_name(message: types.Message, state: FSMContext):
         return
     await state.update_data(last_name=result)
     await message.answer("Введите телефон клиента:")
+    UserDataState.set_previous(current_state=UserDataState.phone, previous_state=UserDataState.last_name)
     await UserDataState.next()
 
 
@@ -68,6 +74,7 @@ async def process_phone(message: types.Message, state: FSMContext):
         return
     await state.update_data(phone=result)
     await message.answer("Введите почту клиента:")
+    UserDataState.set_previous(current_state=UserDataState.email, previous_state=UserDataState.phone)
     await UserDataState.next()
 
 
@@ -78,6 +85,7 @@ async def process_email(message: types.Message, state: FSMContext):
         return
     await state.update_data(email=result)
     await message.answer("Введите время окончания полиса в формате дд.мм.гггг:")
+    UserDataState.set_previous(current_state=UserDataState.email, previous_state=UserDataState.time_insure_end)
     await UserDataState.next()
 
 
@@ -93,7 +101,7 @@ async def process_time_insure_end(message: types.Message, state: FSMContext):
         markup.add(InlineKeyboardButton(text=polis_type.value, callback_data=polis_type.name))
 
     await message.answer("Выберите тип полиса:", reply_markup=markup)
-
+    UserDataState.set_previous(current_state=UserDataState.time_insure_end, previous_state=UserDataState.polis_type)
     await UserDataState.next()
 
 
@@ -104,12 +112,13 @@ async def process_polis_type(callback_query: types.CallbackQuery, state: FSMCont
     await bot.answer_callback_query(callback_query.id, text=polis_type.value)
     await callback_query.message.edit_text(
         f"Вы выбрали тип полиса: {polis_type.value}\nВведите какие-либо важные данные по полису", reply_markup=None)
-    await UserDataState.process_description.set()
+    UserDataState.set_previous(current_state=UserDataState.polis_type, previous_state=UserDataState.process_description)
     await UserDataState.process_description.set()
 
 
 async def process_description(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
+    UserDataState.set_previous(current_state=UserDataState.process_description, previous_state=previous_state)
     await finish_user_data_collection(message, state)
 
 
@@ -127,12 +136,12 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
         "polis_type": data['polis_type'],
     }
 
-    async with (httpx.AsyncClient() as client):
+    async with httpx.AsyncClient() as client:
         if data['action'] == 'создать':
             url = f"{API_URL}/users/create"
             request = client.post
         else:
-            f"{API_URL}/users/{data.get('user_id')}"
+            url = f"{API_URL}/users/{data.get('user_id')}"
             request = client.put
         response = await request(url, json=json_data)
 
@@ -142,6 +151,7 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
             await message.answer(f"Произошла ошибка: {response.text}")
 
     await state.finish()
+
 
 
 def register_user_actions_handlers(dp: Dispatcher):
