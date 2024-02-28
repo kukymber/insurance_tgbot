@@ -10,6 +10,16 @@ from src.core.engine import API_URL, bot, TELEGRAM_CHAT_ID
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 
 
+async def process_text_input(message: types.Message, state: FSMContext, validation_func, next_state, prompt):
+    valid, result = validation_func(message.text)
+    if not valid:
+        await message.answer(result + " Попробуйте еще раз.")
+        return
+    await state.update_data({next_state.state: result})
+    await next_state.set()
+    await message.answer(prompt)
+
+
 class UserDataState(StatesGroup):
     action = State()
     first_name = State()
@@ -20,10 +30,10 @@ class UserDataState(StatesGroup):
     time_insure_end = State()
     polis_type = State()
     process_description = State()
+
     @classmethod
     def set_previous(cls, current_state, previous_state):
         cls.previous_state = previous_state
-
 
 
 async def start_user_data_collection(message: types.Message, state: FSMContext):
@@ -34,59 +44,30 @@ async def start_user_data_collection(message: types.Message, state: FSMContext):
     await UserDataState.first_name.set()
 
 
+@dp.message_handler(state=UserDataState.first_name)
 async def process_first_name(message: types.Message, state: FSMContext):
-    valid, result = validate_name(message.text)
-    if not valid:
-        await message.answer(result + " Попробуйте еще раз.")
-        return
-    await state.update_data(first_name=result)
-    await message.answer("Введите отчество клиента:")
-    UserDataState.set_previous(current_state=UserDataState.middle_name, previous_state=UserDataState.first_name)
-    await UserDataState.next()
+    await process_text_input(message, state, validate_name, UserDataState.middle_name, "Введите отчество клиента:")
 
 
+@dp.message_handler(state=UserDataState.middle_name)
 async def process_middle_name(message: types.Message, state: FSMContext):
-    valid, result = validate_name(message.text)
-    if not valid:
-        await message.answer(result + " Попробуйте еще раз.")
-        return
-    await state.update_data(middle_name=result)
-    await message.answer("Введите Фамилию клиента:")
-    UserDataState.set_previous(current_state=UserDataState.last_name, previous_state=UserDataState.middle_name)
-    await UserDataState.next()
+    await process_text_input(message, state, validate_name, UserDataState.last_name, "Введите Фамилию клиента:")
 
 
+@dp.message_handler(state=UserDataState.last_name)
 async def process_last_name(message: types.Message, state: FSMContext):
-    valid, result = validate_name(message.text)
-    if not valid:
-        await message.answer(result + " Попробуйте еще раз.")
-        return
-    await state.update_data(last_name=result)
-    await message.answer("Введите телефон клиента:")
-    UserDataState.set_previous(current_state=UserDataState.phone, previous_state=UserDataState.last_name)
-    await UserDataState.next()
+    await process_text_input(message, state, validate_name, UserDataState.phone, "Введите телефон клиента:")
 
 
+@dp.message_handler(state=UserDataState.phone)
 async def process_phone(message: types.Message, state: FSMContext):
-    valid, result = validate_phone(message.text)
-    if not valid:
-        await message.answer(result + " Попробуйте еще раз.")
-        return
-    await state.update_data(phone=result)
-    await message.answer("Введите почту клиента:")
-    UserDataState.set_previous(current_state=UserDataState.email, previous_state=UserDataState.phone)
-    await UserDataState.next()
+    await process_text_input(message, state, validate_phone, UserDataState.email, "Введите почту клиента:")
 
 
+@dp.message_handler(state=UserDataState.email)
 async def process_email(message: types.Message, state: FSMContext):
-    valid, result = validate_email(message.text)
-    if not valid:
-        await message.answer(result + " Попробуйте еще раз.")
-        return
-    await state.update_data(email=result)
-    await message.answer("Введите время окончания полиса в формате дд.мм.гггг:")
-    UserDataState.set_previous(current_state=UserDataState.email, previous_state=UserDataState.time_insure_end)
-    await UserDataState.next()
+    await process_text_input(message, state, validate_email, UserDataState.time_insure_end,
+                             "Введите время окончания полиса в формате дд.мм.гггг:")
 
 
 async def process_time_insure_end(message: types.Message, state: FSMContext):
@@ -153,7 +134,6 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
     await state.finish()
 
 
-
 def register_user_actions_handlers(dp: Dispatcher):
     dp.register_message_handler(start_user_data_collection,
                                 lambda message: message.text.lower() in ["создать", "обновить"], state="*")
@@ -165,4 +145,3 @@ def register_user_actions_handlers(dp: Dispatcher):
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
-
