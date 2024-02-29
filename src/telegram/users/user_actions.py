@@ -6,22 +6,32 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from src.core.engine import API_URL, bot
+from src.core.engine import API_URL, bot, TELEGRAM_CHAT_ID
 from src.core.general_button import get_step_keyboard, process_back
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 
 
-async def process_text_input(message: types.Message, state: FSMContext, validation_func, next_state, prompt):
-
+async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state, prompt):
+    """
+    Обрабатывает текстовый ввод пользователя и переходит к следующему состоянию в случае успешной валидации.
+    :param message: Сообщение от пользователя.
+    :param state: Контекст состояния пользователя.
+    :param validation_func: Функция для валидации введенных данных.
+    :param current_state: Текущее состояние в машине состояний.
+    :param next_state: Состояние для перехода после успешной валидации.
+    :param prompt: Сообщение пользователю после успешной валидации.
+    """
     valid, result = validation_func(message.text)
     if not valid:
         await message.answer(result + " Попробуйте еще раз.")
         return
-    await state.update_data({next_state.state: result})
+    state_str = current_state.state if hasattr(current_state, 'state') else str(current_state)
+    await UserDataState.set_previous(state, state_str)
+
+    key_for_data = state_str.split(':')[1]
+    await state.update_data({key_for_data: result})
+
     await next_state.set()
-    # передавать данные в  def set_previous(cls, current_state):
-    #         cls.previous_state = current_state
-    # е переходит к сосотяниям
     await message.answer(prompt, reply_markup=get_step_keyboard())
 
 
@@ -37,18 +47,39 @@ class UserDataState(StatesGroup):
     process_description = State()
 
     @classmethod
-    def set_previous(cls, current_state):
-        cls.previous_state = current_state
+    async def set_previous(cls, state: FSMContext, previous_state):
+        """
+        Сохраняем предыдущее состояние в контексте пользователя.
+        """
+        async with state.proxy() as data:
+            data['previous_state'] = previous_state
 
     @classmethod
     async def go_back(cls, state: FSMContext):
-        if hasattr(cls, 'previous_state'):
-            await state.set_state(cls.previous_state)
+        data = await state.get_data()
+        if data:
+            key_to_remove = data['previous_state'].split(':')[1]
+
+            input_text = data.pop(key_to_remove, None)
+
+            if input_text:
+
+                await state.set_data(data)
+                state_to_set = getattr(UserDataState, key_to_remove)
+                await state_to_set.set()
+                await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=f"Вы вводили - '{input_text}'")
+
+
+            else:
+                await state.finish()
         else:
             await state.finish()
 
 
 async def start_user_data_collection(message: types.Message, state: FSMContext):
+    """
+    Начинает собирать данные по клиенту
+    """
     await UserDataState.action.set()
     async with state.proxy() as data:
         data['action'] = message.text.lower()
@@ -57,27 +88,33 @@ async def start_user_data_collection(message: types.Message, state: FSMContext):
 
 
 async def process_first_name(message: types.Message, state: FSMContext):
-    await process_text_input(message, state, validate_name, UserDataState.middle_name, "Введите отчество клиента:")
+    await process_text_input(message, state, validate_name, UserDataState.first_name, UserDataState.middle_name,
+                             "Введите отчество клиента:")
 
 
 async def process_middle_name(message: types.Message, state: FSMContext):
-    await process_text_input(message, state, validate_name, UserDataState.last_name, "Введите Фамилию клиента:")
+    await process_text_input(message, state, validate_name, UserDataState.middle_name, UserDataState.last_name,
+                             "Введите Фамилию клиента:")
 
 
 async def process_last_name(message: types.Message, state: FSMContext):
-    await process_text_input(message, state, validate_name, UserDataState.phone, "Введите телефон клиента:")
+    await process_text_input(message, state, validate_name, UserDataState.last_name, UserDataState.phone,
+                             "Введите телефон клиента:")
 
 
 async def process_phone(message: types.Message, state: FSMContext):
-    await process_text_input(message, state, validate_phone, UserDataState.email, "Введите почту клиента:")
+    await process_text_input(message, state, validate_phone, UserDataState.phone, UserDataState.email,
+                             "Введите почту клиента:")
 
 
 async def process_email(message: types.Message, state: FSMContext):
-    await process_text_input(message, state, validate_email, UserDataState.time_insure_end,
+    await process_text_input(message, state, validate_email, UserDataState.email, UserDataState.time_insure_end,
                              "Введите время окончания полиса в формате дд.мм.гггг:")
 
 
 async def process_time_insure_end(message: types.Message, state: FSMContext):
+    await UserDataState.set_previous(state, UserDataState.time_insure_end.state)
+
     valid, result = validate_date(message.text)
     if not valid:
         await message.answer(result + " Попробуйте еще раз.")
@@ -93,12 +130,15 @@ async def process_time_insure_end(message: types.Message, state: FSMContext):
 
 
 async def process_polis_type(callback_query: types.CallbackQuery, state: FSMContext):
+    await UserDataState.set_previous(state, UserDataState.polis_type.state)
     polis_type_key = callback_query.data
     polis_type = InsuranceInfoEnum[polis_type_key]
+
     await state.update_data(polis_type=polis_type.value)
-    await bot.answer_callback_query(callback_query.id, text=polis_type.value)
+    await bot.answer_callback_query(callback_query.id)
     await callback_query.message.edit_text(
-        f"Вы выбрали тип полиса: {polis_type.value}\nВведите какие-либо важные данные по полису", reply_markup=get_step_keyboard())
+        f"Вы выбрали тип полиса: {polis_type.value}\nВведите какие-либо важные данные по полису"
+    )
     await UserDataState.process_description.set()
 
 
@@ -108,6 +148,9 @@ async def process_description(message: types.Message, state: FSMContext):
 
 
 async def finish_user_data_collection(message: types.Message, state: FSMContext):
+    """
+     Сбор всей информации в json и отправка на роут POST или PUT запроса.
+    """
     data = await state.get_data()
     json_data = {
         "time_create": datetime.now().isoformat(),
@@ -141,7 +184,11 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
 async def process_back_wrapper(message: types.Message, state: FSMContext):
     await process_back(message, state, UserDataState)
 
+
 def register_user_actions_handlers(dp: Dispatcher):
+    """
+      Регистрация обработчиков
+      """
     dp.register_message_handler(process_back_wrapper, lambda message: message.text.lower() == "назад", state="*")
     dp.register_message_handler(start_user_data_collection,
                                 lambda message: message.text.lower() in ["создать", "обновить"], state="*")
@@ -153,3 +200,6 @@ def register_user_actions_handlers(dp: Dispatcher):
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
+
+
+
