@@ -4,24 +4,13 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from src.core.engine import dp, bot, TELEGRAM_CHAT_ID, API_URL
+from src.telegram.states.state import Form
 from src.telegram.users.user_actions import start_user_data_collection
 
 
 async def send_to_admin(dp):
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text='Бот запущен')
 
-
-class SearchForm(StatesGroup):
-    query = State()
-
-
-class Form(StatesGroup):
-    action = State()
-    report_period = State()
-    user_action = State()
-    create_user = State()
-    update_user = State()
-    find_user = State()
 
 
 # Команда start
