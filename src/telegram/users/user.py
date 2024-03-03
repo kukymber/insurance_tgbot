@@ -1,15 +1,21 @@
 import httpx
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from src.core.engine import dp, bot, TELEGRAM_CHAT_ID, API_URL
+from src.core.engine import bot, TELEGRAM_CHAT_ID, API_URL
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard, get_report_action_keyboard
 from src.telegram.states.state import Form
 from src.telegram.users.user_actions import start_user_data_collection
 
 
-async def send_to_admin(dp):
-    await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text='Бот запущен')
+async def send_to_admin(dp: Dispatcher):
+    bot_user = await bot.get_me()
+    start_button = InlineKeyboardMarkup().add(
+        InlineKeyboardButton("Начать работу с ботом", url=f"https://t.me/{bot_user.username}?start")
+    )
+    await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text="Бот запущен. Нажмите на кнопку ниже, чтобы начать работу.",
+                           reply_markup=start_button)
 
 
 # Команда start
