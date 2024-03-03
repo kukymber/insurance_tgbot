@@ -1,9 +1,9 @@
 import httpx
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from src.core.engine import dp, bot, TELEGRAM_CHAT_ID, API_URL
+from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard, get_report_action_keyboard
 from src.telegram.states.state import Form
 from src.telegram.users.user_actions import start_user_data_collection
 
@@ -12,35 +12,28 @@ async def send_to_admin(dp):
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text='Бот запущен')
 
 
-
 # Команда start
-@dp.message_handler(commands=['start'], state='*')
 async def cmd_start(message: types.Message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.add("Клиент", "Отчет")
+    markup = get_main_menu_keyboard()
     await message.answer("Выберите действие:", reply_markup=markup)
     await Form.action.set()
 
 
-@dp.message_handler(state=Form.action)
 async def process_action(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['action'] = message.text
         mes = data['action']
     if mes == "Клиент":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-        markup.add("Создать", "Изменить", "Найти")
+        markup = get_client_action_keyboard()
         await Form.user_action.set()
         await message.answer("Выберите действие с клиентом:", reply_markup=markup)
     elif mes == "Отчет":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-        markup.add("Выбрать период", "Отметить продленные")
+        markup = get_report_action_keyboard()
         await Form.report_period.set()
         await message.answer("Выберите действие с отчетом:", reply_markup=markup)
         pass  # логика вызова report.py
 
 
-@dp.message_handler(state=Form.user_action)
 async def process_client_action(message: types.Message, state: FSMContext):
     if message.text == "Создать":
         await start_user_data_collection(message, state)
@@ -58,9 +51,6 @@ async def process_client_action(message: types.Message, state: FSMContext):
             else:
                 await message.answer("Произошла ошибка при получении отчета.")
         await state.finish()
-
-
-
 
 
 def register_user_handlers(dp: Dispatcher):

@@ -1,9 +1,6 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-
-
-
 def get_step_keyboard():
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     keyboard.add("Назад")

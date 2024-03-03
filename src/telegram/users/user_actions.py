@@ -3,16 +3,17 @@ from datetime import datetime
 import httpx
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from src.core.engine import API_URL, bot, TELEGRAM_CHAT_ID
+from src.core.engine import API_URL, bot
 from src.core.general_button import get_step_keyboard, process_back
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
+from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard
 from src.telegram.states.state import UserDataState, Form
 
 
-async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state, prompt):
+async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state,
+                             prompt):
     """
     Обрабатывает текстовый ввод пользователя и переходит к следующему состоянию в случае успешной валидации.
     :param message: Сообщение от пользователя.
@@ -34,9 +35,6 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
 
     await next_state.set()
     await message.answer(prompt, reply_markup=get_step_keyboard())
-
-
-
 
 
 async def start_user_data_collection(message: types.Message, state: FSMContext):
@@ -138,11 +136,18 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
 
         if response.status_code in (200, 201):
             await message.answer("Данные успешно обработаны.")
+            await state.finish()
             await Form.action.set()
+            markup = get_main_menu_keyboard()
+            await message.answer("Выберите действие:", reply_markup=markup)
         else:
             await message.answer(f"Произошла ошибка: {response.text}")
+            await state.set_data({})
+            await Form.user_action.set()
+            markup = get_client_action_keyboard()
+            await message.answer("Выберите действие:", reply_markup=markup)
 
-    await state.finish()
+
 
 
 async def process_back_wrapper(message: types.Message, state: FSMContext):
@@ -164,6 +169,3 @@ def register_user_actions_handlers(dp: Dispatcher):
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
-
-
-
