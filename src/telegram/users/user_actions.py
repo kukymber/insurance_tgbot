@@ -9,6 +9,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from src.core.engine import API_URL, bot, TELEGRAM_CHAT_ID
 from src.core.general_button import get_step_keyboard, process_back
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
+from src.telegram.states.state import UserDataState, Form
 
 
 async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state, prompt):
@@ -35,45 +36,7 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
     await message.answer(prompt, reply_markup=get_step_keyboard())
 
 
-class UserDataState(StatesGroup):
-    action = State()
-    first_name = State()
-    middle_name = State()
-    last_name = State()
-    phone = State()
-    email = State()
-    time_insure_end = State()
-    polis_type = State()
-    process_description = State()
 
-    @classmethod
-    async def set_previous(cls, state: FSMContext, previous_state):
-        """
-        Сохраняем предыдущее состояние в контексте пользователя.
-        """
-        async with state.proxy() as data:
-            data['previous_state'] = previous_state
-
-    @classmethod
-    async def go_back(cls, state: FSMContext):
-        data = await state.get_data()
-        if data:
-            key_to_remove = data['previous_state'].split(':')[1]
-
-            input_text = data.pop(key_to_remove, None)
-
-            if input_text:
-
-                await state.set_data(data)
-                state_to_set = getattr(UserDataState, key_to_remove)
-                await state_to_set.set()
-                await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=f"Вы вводили - '{input_text}'")
-
-
-            else:
-                await state.finish()
-        else:
-            await state.finish()
 
 
 async def start_user_data_collection(message: types.Message, state: FSMContext):
@@ -134,7 +97,7 @@ async def process_polis_type(callback_query: types.CallbackQuery, state: FSMCont
     polis_type_key = callback_query.data
     polis_type = InsuranceInfoEnum[polis_type_key]
 
-    await state.update_data(polis_type=polis_type.value)
+    await state.update_data(polis_type=polis_type_key)
     await bot.answer_callback_query(callback_query.id)
     await callback_query.message.edit_text(
         f"Вы выбрали тип полиса: {polis_type.value}\nВведите какие-либо важные данные по полису"
@@ -175,6 +138,7 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
 
         if response.status_code in (200, 201):
             await message.answer("Данные успешно обработаны.")
+            await Form.action.set()
         else:
             await message.answer(f"Произошла ошибка: {response.text}")
 
