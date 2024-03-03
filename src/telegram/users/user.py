@@ -9,6 +9,11 @@ from src.telegram.states.state import Form
 from src.telegram.users.user_actions import start_user_data_collection
 
 
+async def process_user_id(message: types.Message, state: FSMContext):
+    await state.update_data(user_id=message.text)
+    await start_user_data_collection(message, state)
+
+
 async def send_to_admin(dp: Dispatcher):
     bot_user = await bot.get_me()
     start_button = InlineKeyboardMarkup().add(
@@ -44,9 +49,8 @@ async def process_client_action(message: types.Message, state: FSMContext):
     if message.text == "Создать":
         await start_user_data_collection(message, state)
     elif message.text == "Изменить":
+        await Form.waiting_for_user_id.set()
         await message.answer("Введите ID клиента, которого нужно изменить.")
-        await message.answer("Введите данные клиента.")
-        await start_user_data_collection(message, state)
     elif message.text == "Найти":
         await message.answer("Введите данные для поиска клиента.")
         period = message.text
@@ -63,3 +67,4 @@ def register_user_handlers(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands=['start'], state='*')
     dp.register_message_handler(process_action, state=Form.action)
     dp.register_message_handler(process_client_action, state=Form.user_action)
+    dp.register_message_handler(process_user_id, state=Form.waiting_for_user_id)

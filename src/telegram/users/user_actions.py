@@ -148,8 +148,6 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
             await message.answer("Выберите действие:", reply_markup=markup)
 
 
-
-
 async def process_back_wrapper(message: types.Message, state: FSMContext):
     await process_back(message, state, UserDataState)
 
