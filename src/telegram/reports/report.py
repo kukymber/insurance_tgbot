@@ -9,7 +9,7 @@ class ReportForm(StatesGroup):
     input_period = State()
     input_ids_for_extension = State()
 
-API_URL = "http://127.0.0.1:8000/users/get_all"  # Пример URL к FastAPI
+API_URL = "http://127.0.0.1:8000/users/get_all"
 
 @dp.message_handler(commands=['report'], state='*')
 async def start_report(message: types.Message):
@@ -44,9 +44,7 @@ async def process_period(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=ReportForm.input_ids_for_extension)
 async def process_ids_for_extension(message: types.Message, state: FSMContext):
-    # Логика отправки ID для пометки продленных полисов
     ids = message.text
-    # Пример запроса к другому роуту FastAPI для обновления данных (не реализован в вашем примере)
     await state.finish()
 
 

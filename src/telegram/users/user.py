@@ -15,16 +15,25 @@ async def process_user_id(message: types.Message, state: FSMContext):
 
 
 async def send_to_admin(dp: Dispatcher):
-    bot_user = await bot.get_me()
     start_button = InlineKeyboardMarkup().add(
-        InlineKeyboardButton("Начать работу с ботом", url=f"https://t.me/{bot_user.username}?start")
+        InlineKeyboardButton("Начать работу с ботом", callback_data="start")
     )
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text="Бот запущен. Нажмите на кнопку ниже, чтобы начать работу.",
                            reply_markup=start_button)
 
 
+async def start_callback_handler(callback_query: types.CallbackQuery):
+    await cmd_start(callback_query)
+
+
 # Команда start
-async def cmd_start(message: types.Message):
+async def cmd_start(event):
+    if isinstance(event, types.Message):
+        message = event
+    elif isinstance(event, types.CallbackQuery):
+        message = event.message
+        await event.answer()
+
     markup = get_main_menu_keyboard()
     await message.answer("Выберите действие:", reply_markup=markup)
     await Form.action.set()
@@ -64,7 +73,8 @@ async def process_client_action(message: types.Message, state: FSMContext):
 
 
 def register_user_handlers(dp: Dispatcher):
-    dp.register_message_handler(cmd_start, commands=['start'], state='*')
+    dp.register_message_handler(cmd_start, commands="start", state="*")
+    dp.register_callback_query_handler(start_callback_handler, lambda c: c.data == 'start')
     dp.register_message_handler(process_action, state=Form.action)
     dp.register_message_handler(process_client_action, state=Form.user_action)
     dp.register_message_handler(process_user_id, state=Form.waiting_for_user_id)
