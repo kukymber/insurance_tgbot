@@ -138,9 +138,11 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
         if data['action'] == 'создать':
             url = f"{API_URL}/users/create"
             request = client.post
-        else:
+        elif data['action'] == 'обновить':
             url = f"{API_URL}/users/{data.get('user_id')}"
             request = client.put
+        else:
+            raise ValueError("Не установленно действие! ")
         response = await request(url, json=json_data)
 
         if response.status_code in (200, 201):
