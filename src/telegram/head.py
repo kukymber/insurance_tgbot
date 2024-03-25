@@ -6,7 +6,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import bot, TELEGRAM_CHAT_ID, API_URL
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard, get_report_action_keyboard
-from src.telegram.states.state import Form
+from src.telegram.states.state import Form, UserDataState
 from src.telegram.users.user_actions import start_user_data_collection, process_user_id
 
 
@@ -53,7 +53,8 @@ async def process_client_action(message: types.Message, state: FSMContext):
     if message.text == "Создать":
         await start_user_data_collection(message, state)
     elif message.text == "Изменить":
-        await process_user_id(message, state)
+        await UserDataState.user_id.set()
+        await message.answer("Введите ID клиента, которого нужно изменить.")
     elif message.text == "Найти":
         await message.answer("Введите данные для поиска клиента.")
         period = message.text

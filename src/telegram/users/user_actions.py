@@ -13,9 +13,8 @@ from src.telegram.states.state import UserDataState, Form
 
 
 async def process_user_id(message: types.Message, state: FSMContext):
-    await UserDataState.user_id.set()
-    await message.answer("Введите ID клиента, которого нужно изменить.")
     await state.update_data(user_id=message.text)
+    await start_user_data_collection(message, state)
 
 async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state,
                              prompt):
@@ -177,6 +176,6 @@ def register_user_actions_handlers(dp: Dispatcher):
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
-    dp.register_message_handler(process_user_id, state=Form.waiting_for_user_id)
+    dp.register_message_handler(process_user_id, state=UserDataState.user_id)
 
 
