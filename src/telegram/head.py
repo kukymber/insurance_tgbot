@@ -1,17 +1,13 @@
 import httpx
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters import state
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import bot, TELEGRAM_CHAT_ID, API_URL
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard, get_report_action_keyboard
 from src.telegram.states.state import Form
-from src.telegram.users.user_actions import start_user_data_collection
-
-
-async def process_user_id(message: types.Message, state: FSMContext):
-    await state.update_data(user_id=message.text)
-    await start_user_data_collection(message, state)
+from src.telegram.users.user_actions import start_user_data_collection, process_user_id
 
 
 async def send_to_admin(dp: Dispatcher):
@@ -26,7 +22,6 @@ async def start_callback_handler(callback_query: types.CallbackQuery):
     await cmd_start(callback_query)
 
 
-# Команда start
 async def cmd_start(event):
     if isinstance(event, types.Message):
         message = event
@@ -58,8 +53,7 @@ async def process_client_action(message: types.Message, state: FSMContext):
     if message.text == "Создать":
         await start_user_data_collection(message, state)
     elif message.text == "Изменить":
-        await Form.waiting_for_user_id.set()
-        await message.answer("Введите ID клиента, которого нужно изменить.")
+        await process_user_id(message, state)
     elif message.text == "Найти":
         await message.answer("Введите данные для поиска клиента.")
         period = message.text
@@ -77,4 +71,3 @@ def register_user_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(start_callback_handler, lambda c: c.data == 'start')
     dp.register_message_handler(process_action, state=Form.action)
     dp.register_message_handler(process_client_action, state=Form.user_action)
-    dp.register_message_handler(process_user_id, state=Form.waiting_for_user_id)

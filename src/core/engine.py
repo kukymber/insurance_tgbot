@@ -28,7 +28,7 @@ dp.middleware.setup(LoggingMiddleware())
 
 def start_bot():
     from src.telegram.users.user_actions import register_user_actions_handlers
-    from src.telegram.users.user import send_to_admin, register_user_handlers
+    from src.telegram.head import send_to_admin, register_user_handlers
     from src.telegram.reports.report import register_report_handlers
     register_user_actions_handlers(dp)
     register_user_handlers(dp)

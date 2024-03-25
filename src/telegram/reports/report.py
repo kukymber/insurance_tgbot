@@ -1,7 +1,7 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from src.core.engine import dp, bot, API_URL
+from src.core.engine import dp, API_URL
 import httpx
 
 class ReportForm(StatesGroup):
@@ -49,7 +49,7 @@ async def process_ids_for_extension(message: types.Message, state: FSMContext):
 
 
 def register_report_handlers(dp: Dispatcher):
-    from src.telegram.users.user import Form
+    from src.telegram.head import Form
     dp.register_message_handler(start_report, state=Form.report_period)
     dp.register_message_handler(process_action, state=Form.action)
     # dp.register_message_handler(process_client_action, state=Form.user_action)

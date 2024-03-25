@@ -19,6 +19,7 @@ class Form(StatesGroup):
 
 
 class UserDataState(StatesGroup):
+    user_id = State()
     action = State()
     first_name = State()
     middle_name = State()

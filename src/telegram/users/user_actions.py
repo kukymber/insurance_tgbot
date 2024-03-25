@@ -12,6 +12,11 @@ from src.telegram.buttons.button import get_main_menu_keyboard, get_client_actio
 from src.telegram.states.state import UserDataState, Form
 
 
+async def process_user_id(message: types.Message, state: FSMContext):
+    await UserDataState.user_id.set()
+    await message.answer("Введите ID клиента, которого нужно изменить.")
+    await state.update_data(user_id=message.text)
+
 async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state,
                              prompt):
     """
@@ -39,13 +44,18 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
 
 async def start_user_data_collection(message: types.Message, state: FSMContext):
     """
-    Начинает собирать данные по клиенту
+    Начинает собирать данные по клиенту.
+    Если user_id уже есть в state, значит мы обновляем данные клиента.
+    В противном случае - создаем нового клиента.
     """
-    await UserDataState.action.set()
-    async with state.proxy() as data:
-        data['action'] = message.text.lower()
-    await message.answer("Введите имя клиента:", reply_markup=None)
+    data = await state.get_data()
+    user_id = data.get('user_id')
+
+    action = 'обновить' if user_id else 'создать'
+    await state.update_data(action=action)
+
     await UserDataState.first_name.set()
+    await message.answer(f"Введите имя клиента (действие: {action}):", reply_markup=None)
 
 
 async def process_first_name(message: types.Message, state: FSMContext):
@@ -167,3 +177,6 @@ def register_user_actions_handlers(dp: Dispatcher):
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
+    dp.register_message_handler(process_user_id, state=Form.waiting_for_user_id)
+
+
