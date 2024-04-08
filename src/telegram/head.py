@@ -6,7 +6,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import bot, TELEGRAM_CHAT_ID, API_URL
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard, get_report_action_keyboard
-from src.telegram.states.state import Form, UserDataState
+from src.telegram.states.state import Form, UserDataState, ReportData
 from src.telegram.users.user_actions import start_user_data_collection, process_user_id
 
 
@@ -44,9 +44,8 @@ async def process_action(message: types.Message, state: FSMContext):
         await message.answer("Выберите действие с клиентом:", reply_markup=markup)
     elif mes == "Отчет":
         markup = get_report_action_keyboard()
-        await Form.report_period.set()
+        await ReportData.report_action.set()
         await message.answer("Выберите действие с отчетом:", reply_markup=markup)
-        pass  # логика вызова report.py
 
 
 async def process_client_action(message: types.Message, state: FSMContext):
