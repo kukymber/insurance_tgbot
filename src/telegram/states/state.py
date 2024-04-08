@@ -10,7 +10,6 @@ class SearchForm(StatesGroup):
 
 class Form(StatesGroup):
     action = State()
-    report_period = State()
     user_action = State()
     waiting_for_user_id = State()
     create_user = State()
@@ -29,6 +28,11 @@ class UserDataState(StatesGroup):
     time_insure_end = State()
     polis_type = State()
     process_description = State()
+
+class ReportData(StatesGroup):
+    report_action = State()
+    input_period = State()
+    input_ids_for_extension = State()
 
     @classmethod
     async def set_previous(cls, state: FSMContext, previous_state):
