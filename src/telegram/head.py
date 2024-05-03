@@ -1,13 +1,13 @@
-import httpx
+from aiogram import types, Dispatcher
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import state
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from src.core.engine import bot, TELEGRAM_CHAT_ID, API_URL
-from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard, get_report_action_keyboard
+from src.core.engine import bot, TELEGRAM_CHAT_ID
+from src.telegram.buttons.button import get_client_action_keyboard, get_report_action_keyboard
+from src.telegram.start import cmd_start
 from src.telegram.states.state import Form, UserDataState, ReportData
-from src.telegram.users.user_actions import start_user_data_collection, process_user_id
+from src.telegram.users.user_actions import start_user_data_collection
 
 
 async def send_to_admin(dp: Dispatcher):
@@ -20,18 +20,6 @@ async def send_to_admin(dp: Dispatcher):
 
 async def start_callback_handler(callback_query: types.CallbackQuery):
     await cmd_start(callback_query)
-
-
-async def cmd_start(event):
-    if isinstance(event, types.Message):
-        message = event
-    elif isinstance(event, types.CallbackQuery):
-        message = event.message
-        await event.answer()
-
-    markup = get_main_menu_keyboard()
-    await message.answer("Выберите действие:", reply_markup=markup)
-    await Form.action.set()
 
 
 async def process_action(message: types.Message, state: FSMContext):
@@ -55,15 +43,8 @@ async def process_client_action(message: types.Message, state: FSMContext):
         await UserDataState.user_id.set()
         await message.answer("Введите ID клиента, которого нужно изменить.")
     elif message.text == "Найти":
+        await Form.find_user.set()
         await message.answer("Введите данные для поиска клиента.")
-        period = message.text
-        async with httpx.AsyncClient() as client:
-            response = await client.get(API_URL, params={"date_insurance_end": period})
-            if response.status_code == 200:
-                await message.answer(f"Отчет за период {period}: {response.json()}")
-            else:
-                await message.answer("Произошла ошибка при получении отчета.")
-        await state.finish()
 
 
 def register_user_handlers(dp: Dispatcher):

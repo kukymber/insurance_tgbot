@@ -29,11 +29,6 @@ class UserDataState(StatesGroup):
     polis_type = State()
     process_description = State()
 
-class ReportData(StatesGroup):
-    report_action = State()
-    input_period = State()
-    input_ids_for_extension = State()
-
     @classmethod
     async def set_previous(cls, state: FSMContext, previous_state):
         """
@@ -60,3 +55,9 @@ class ReportData(StatesGroup):
                 await state.finish()
         else:
             await state.finish()
+
+
+class ReportData(StatesGroup):
+    report_action = State()
+    input_period = State()
+    input_ids_for_extension = State()

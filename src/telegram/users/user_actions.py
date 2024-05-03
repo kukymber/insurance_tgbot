@@ -3,18 +3,20 @@ from datetime import datetime
 import httpx
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, callback_query
 
 from src.core.engine import API_URL, bot
 from src.core.general_button import get_step_keyboard, process_back
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard
+from src.telegram.start import cmd_start
 from src.telegram.states.state import UserDataState, Form
 
 
 async def process_user_id(message: types.Message, state: FSMContext):
     await state.update_data(user_id=message.text)
     await start_user_data_collection(message, state)
+
 
 async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state,
                              prompt):
@@ -163,6 +165,33 @@ async def process_back_wrapper(message: types.Message, state: FSMContext):
     await process_back(message, state, UserDataState)
 
 
+async def find_user_fio(message: types.Message, state: FSMContext):
+    fio = message.text
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{API_URL}/users/users/get_all/",
+                                    params={"search_query": fio, "page": 1, "size": 10})
+        if response.status_code == 200:
+            data = response.json()
+            users = data.get('users', [])
+            response_text = f"Данные для поиска '{fio}':\n"
+            for user in users:
+                user_info = (
+                    f"Id: {user['id']}, "
+                    f"Фамилия: {user['last_name']}, "
+                    f"Имя: {user['first_name']}, "
+                    f"Отчество: {user['middle_name']}, "
+                    f"Телефон: {user['phone']}, "
+                    f"Почта: {user['email']}"
+                )
+                response_text += user_info + "\n"
+            await message.answer(response_text)
+        else:
+            await message.answer("Произошла ошибка при получении отчета.")
+            await Form.action.set()
+    await cmd_start(callback_query)
+    await state.finish()
+
+
 def register_user_actions_handlers(dp: Dispatcher):
     """
       Регистрация обработчиков
@@ -179,5 +208,4 @@ def register_user_actions_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
     dp.register_message_handler(process_user_id, state=UserDataState.user_id)
-
-
+    dp.register_message_handler(find_user_fio, state=Form.find_user)
