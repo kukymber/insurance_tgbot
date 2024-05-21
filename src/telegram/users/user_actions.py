@@ -127,11 +127,11 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
     json_data = {
         "time_create": datetime.now().isoformat(),
         "time_insure_end": data['time_insure_end'],
-        "first_name": data['first_name'],
-        "middle_name": data['middle_name'],
-        "last_name": data['last_name'],
+        "first_name": data['first_name'].title(),
+        "middle_name": data['middle_name'].title(),
+        "last_name": data['last_name'].title(),
         "phone": data['phone'],
-        "email": data['email'],
+        "email": data['email'].lower,
         "description": data['description'],
         "polis_type": data['polis_type'],
     }
