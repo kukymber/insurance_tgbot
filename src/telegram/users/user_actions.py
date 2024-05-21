@@ -196,7 +196,7 @@ def register_user_actions_handlers(dp: Dispatcher):
     """
       Регистрация обработчиков
       """
-    dp.register_message_handler(process_back_wrapper, lambda message: message.text.lower() == "назад", state="*")
+    dp.register_message_handler(process_back_wrapper, lambda message: message.text.lower() == "Пердыдуший шаг", state="*")
     dp.register_message_handler(start_user_data_collection,
                                 lambda message: message.text.lower() in ["создать", "обновить"], state="*")
     dp.register_message_handler(process_first_name, state=UserDataState.first_name)

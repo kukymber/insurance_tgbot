@@ -4,6 +4,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import bot, TELEGRAM_CHAT_ID
+from src.core.general_button import go_back_state
 from src.telegram.buttons.button import get_client_action_keyboard, get_report_action_keyboard
 from src.telegram.start import cmd_start
 from src.telegram.states.state import Form, UserDataState, ReportData
@@ -27,7 +28,7 @@ async def process_action(message: types.Message, state: FSMContext):
         data['action'] = message.text
         mes = data['action']
     if mes == "Клиент":
-        data['previous_state'] = message.text
+        await state.update_data(previous_state=Form.action)
         markup = get_client_action_keyboard()
         await Form.user_action.set()
         await message.answer("Выберите действие с клиентом:", reply_markup=markup)
@@ -47,10 +48,13 @@ async def process_client_action(message: types.Message, state: FSMContext):
     elif message.text == "Найти":
         await Form.find_user.set()
         await message.answer("Введите данные для поиска клиента.")
+    elif message.text == "Назад":
+        await go_back_state(message, state)
 
 
 def register_user_handlers(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands="start", state="*")
+    dp.register_message_handler(go_back_state, lambda message: message == "Назад", state="*")
     dp.register_callback_query_handler(start_callback_handler, lambda c: c.data == 'start')
     dp.register_message_handler(process_action, state=Form.action)
     dp.register_message_handler(process_client_action, state=Form.user_action)
