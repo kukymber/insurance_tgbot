@@ -11,12 +11,12 @@ def get_main_menu_keyboard():
 def get_client_action_keyboard():
     """Клавиатура для выбора действий с клиентом."""
     markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.add("Создать", "Изменить", "Найти")
+    markup.add("Создать", "Изменить", "Найти", "Назад")
     return markup
 
 
 def get_report_action_keyboard():
     """Клавиатура для выбора действий с отчетами."""
     markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.add("Выбрать период", "Отметить продленные")
+    markup.add("Выбрать период", "Отметить продленные", "Назад")
     return markup
