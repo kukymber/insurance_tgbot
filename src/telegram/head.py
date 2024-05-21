@@ -27,10 +27,12 @@ async def process_action(message: types.Message, state: FSMContext):
         data['action'] = message.text
         mes = data['action']
     if mes == "Клиент":
+        data['previous_state'] = message.text
         markup = get_client_action_keyboard()
         await Form.user_action.set()
         await message.answer("Выберите действие с клиентом:", reply_markup=markup)
     elif mes == "Отчет":
+        data['previous_state'] = message.text
         markup = get_report_action_keyboard()
         await ReportData.report_action.set()
         await message.answer("Выберите действие с отчетом:", reply_markup=markup)

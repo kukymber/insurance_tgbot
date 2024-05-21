@@ -187,10 +187,10 @@ async def find_user_fio(message: types.Message, state: FSMContext):
             await message.answer(response_text)
         else:
             await message.answer("Произошла ошибка при получении отчета.")
-            await Form.action.set()
-    await cmd_start(callback_query)
     await state.finish()
-
+    await Form.action.set()
+    markup = get_main_menu_keyboard()
+    await message.answer("Выберите действие:", reply_markup=markup)
 
 def register_user_actions_handlers(dp: Dispatcher):
     """
