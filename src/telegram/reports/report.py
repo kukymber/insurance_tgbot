@@ -3,7 +3,7 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 
 from src.core.engine import API_URL
-from src.telegram.states.state import ReportData
+from src.telegram.states.report.report_state import ReportData
 
 API_URL = "http://127.0.0.1:8000/users/get_all"
 
@@ -70,7 +70,7 @@ async def process_ids_for_extension(message: types.Message, state: FSMContext):
 
 
 def register_report_handlers(dp: Dispatcher):
-    from src.telegram.head import Form
+    from src.telegram.head import Title
     dp.register_message_handler(start_report, state=ReportData.report_action)
     dp.register_message_handler(process_action, lambda message: message.text.lower() in
                                                                 ["выбрать период", "отметить продленные"], state="*")

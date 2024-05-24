@@ -1,7 +1,7 @@
 from aiogram import types
 
 from src.telegram.buttons.button import get_main_menu_keyboard
-from src.telegram.states.state import Form
+from src.telegram.states.title import Title
 
 
 async def cmd_start(event):
@@ -13,4 +13,4 @@ async def cmd_start(event):
 
     markup = get_main_menu_keyboard()
     await message.answer("Выберите действие:", reply_markup=markup)
-    await Form.action.set()
+    await Title.start_action.set()

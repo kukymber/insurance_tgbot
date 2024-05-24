@@ -10,7 +10,8 @@ from src.core.general_button import get_step_keyboard, process_back
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard
 from src.telegram.start import cmd_start
-from src.telegram.states.state import UserDataState, Form
+from src.telegram.states.client.client_state import UserDataState
+from src.telegram.states.title import Title
 
 
 async def process_user_id(message: types.Message, state: FSMContext):
@@ -131,7 +132,7 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
         "middle_name": data['middle_name'].title(),
         "last_name": data['last_name'].title(),
         "phone": data['phone'],
-        "email": data['email'].lower,
+        "email": data['email'],
         "description": data['description'],
         "polis_type": data['polis_type'],
     }
@@ -150,13 +151,13 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
         if response.status_code in (200, 201):
             await message.answer("Данные успешно обработаны.")
             await state.finish()
-            await Form.action.set()
+            await Title.start_action.set()
             markup = get_main_menu_keyboard()
             await message.answer("Выберите действие:", reply_markup=markup)
         else:
             await message.answer(f"Произошла ошибка: {response.text}")
             await state.set_data({})
-            await Form.user_action.set()
+            await Title.user_action.set()
             markup = get_client_action_keyboard()
             await message.answer("Выберите действие:", reply_markup=markup)
 
@@ -188,15 +189,17 @@ async def find_user_fio(message: types.Message, state: FSMContext):
         else:
             await message.answer("Произошла ошибка при получении отчета.")
     await state.finish()
-    await Form.action.set()
+    await Title.start_action.set()
     markup = get_main_menu_keyboard()
     await message.answer("Выберите действие:", reply_markup=markup)
+
 
 def register_user_actions_handlers(dp: Dispatcher):
     """
       Регистрация обработчиков
       """
-    dp.register_message_handler(process_back_wrapper, lambda message: message.text.lower() == "Пердыдуший шаг", state="*")
+    dp.register_message_handler(process_back_wrapper, lambda message: message.text.lower() == "Пердыдуший шаг",
+                                state="*")
     dp.register_message_handler(start_user_data_collection,
                                 lambda message: message.text.lower() in ["создать", "обновить"], state="*")
     dp.register_message_handler(process_first_name, state=UserDataState.first_name)
@@ -208,4 +211,4 @@ def register_user_actions_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
     dp.register_message_handler(process_user_id, state=UserDataState.user_id)
-    dp.register_message_handler(find_user_fio, state=Form.find_user)
+    dp.register_message_handler(find_user_fio, state=Title.find_user)

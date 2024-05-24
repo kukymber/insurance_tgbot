@@ -4,18 +4,6 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 from src.core.engine import TELEGRAM_CHAT_ID, bot
 
 
-class SearchForm(StatesGroup):
-    query = State()
-
-
-class Form(StatesGroup):
-    action = State()
-    user_action = State()
-    waiting_for_user_id = State()
-    create_user = State()
-    update_user = State()
-    find_user = State()
-
 
 class UserDataState(StatesGroup):
     user_id = State()
@@ -55,9 +43,3 @@ class UserDataState(StatesGroup):
                 await state.finish()
         else:
             await state.finish()
-
-
-class ReportData(StatesGroup):
-    report_action = State()
-    input_period = State()
-    input_ids_for_extension = State()

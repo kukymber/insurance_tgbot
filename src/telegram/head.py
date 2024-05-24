@@ -7,7 +7,10 @@ from src.core.engine import bot, TELEGRAM_CHAT_ID
 from src.core.general_button import go_back_state
 from src.telegram.buttons.button import get_client_action_keyboard, get_report_action_keyboard
 from src.telegram.start import cmd_start
-from src.telegram.states.state import Form, UserDataState, ReportData
+from src.telegram.states.title import Title
+from src.telegram.states.client.client_state import UserDataState
+from src.telegram.states.report.report_state import ReportData
+
 from src.telegram.users.user_actions import start_user_data_collection
 
 
@@ -28,9 +31,9 @@ async def process_action(message: types.Message, state: FSMContext):
         data['action'] = message.text
         mes = data['action']
     if mes == "Клиент":
-        await state.update_data(previous_state=Form.action)
+        await state.update_data(previous_state=Title.start_action)
         markup = get_client_action_keyboard()
-        await Form.user_action.set()
+        await Title.user_action.set()
         await message.answer("Выберите действие с клиентом:", reply_markup=markup)
     elif mes == "Отчет":
         data['previous_state'] = message.text
@@ -46,7 +49,7 @@ async def process_client_action(message: types.Message, state: FSMContext):
         await UserDataState.user_id.set()
         await message.answer("Введите ID клиента, которого нужно изменить.")
     elif message.text == "Найти":
-        await Form.find_user.set()
+        await Title.find_user.set()
         await message.answer("Введите данные для поиска клиента.")
     elif message.text == "Назад":
         await go_back_state(message, state)
@@ -56,5 +59,5 @@ def register_user_handlers(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands="start", state="*")
     dp.register_message_handler(go_back_state, lambda message: message == "Назад", state="*")
     dp.register_callback_query_handler(start_callback_handler, lambda c: c.data == 'start')
-    dp.register_message_handler(process_action, state=Form.action)
-    dp.register_message_handler(process_client_action, state=Form.user_action)
+    dp.register_message_handler(process_action, state=Title.start_action)
+    dp.register_message_handler(process_client_action, state=Title.user_action)
