@@ -11,7 +11,7 @@ from src.telegram.states.title import Title
 from src.telegram.states.client.client_state import UserDataState
 from src.telegram.states.report.report_state import ReportData
 
-from src.telegram.users.user_actions import start_user_data_collection
+from src.telegram.users.client_action import start_user_data_collection
 
 
 async def send_to_admin(dp: Dispatcher):

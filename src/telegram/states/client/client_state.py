@@ -4,7 +4,6 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 from src.core.engine import TELEGRAM_CHAT_ID, bot
 
 
-
 class UserDataState(StatesGroup):
     user_id = State()
     action = State()
