@@ -45,5 +45,5 @@ def get_step_keyboard() -> InlineKeyboardMarkup:
     :return: InlineKeyboardMarkup
     """
     keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(InlineKeyboardButton("Назад", callback_data='back'))
+    keyboard.add(InlineKeyboardButton("назад", callback_data='назад'))
     return keyboard
