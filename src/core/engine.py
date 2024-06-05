@@ -27,11 +27,7 @@ user_state = {}
 
 
 def start_bot():
-    from src.telegram.handlers.client_handlers import register_user_actions_handlers
-    from src.telegram.handlers.report_handlers import register_report_handlers
-    from src.telegram.handlers.head_handlers import register_user_handlers
+    from src.telegram.handlers.handlers import register_handlers
     from src.telegram.head import send_to_admin
-    register_user_actions_handlers(dp)
-    register_user_handlers(dp)
-    register_report_handlers(dp)
+    register_handlers(dp)
     executor.start_polling(dp, on_startup=send_to_admin, skip_updates=True)

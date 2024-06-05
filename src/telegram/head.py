@@ -5,7 +5,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import bot, TELEGRAM_CHAT_ID
 from src.core.back_functions import go_back_state
-from src.telegram.buttons.button import get_client_action_keyboard, get_report_action_keyboard
+from src.telegram.keyboards.keyboards import create_client_menu, create_report_menu
 from src.telegram.start import cmd_start
 from src.telegram.states.title import Title
 from src.telegram.states.client.client_state import UserDataState
@@ -32,12 +32,12 @@ async def process_action(message: types.Message, state: FSMContext):
         mes = data['action']
     if mes == "Клиент":
         await state.update_data(previous_state=Title.start_action)
-        markup = get_client_action_keyboard()
+        markup = create_client_menu()
         await Title.user_action.set()
         await message.answer("Выберите действие с клиентом:", reply_markup=markup)
     elif mes == "Отчет":
         data['previous_state'] = message.text
-        markup = get_report_action_keyboard()
+        markup = create_report_menu()
         await ReportData.report_action.set()
         await message.answer("Выберите действие с отчетом:", reply_markup=markup)
 

@@ -1,5 +1,4 @@
 from datetime import datetime
-
 import httpx
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -8,19 +7,18 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from src.core.back_functions import process_back
 from src.core.engine import API_URL, bot
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
-from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard
-from src.telegram.buttons.button import get_step_keyboard
+from src.telegram.keyboards.keyboards import create_main_menu, create_client_menu, get_step_keyboard
 from src.telegram.states.client.client_state import UserDataState
 from src.telegram.states.title import Title
 
 
-async def process_user_id(message: types.Message, state: FSMContext):
+async def process_user_id(message: types.Message, state: FSMContext) -> None:
     await state.update_data(user_id=message.text)
     await start_user_data_collection(message, state)
 
 
-async def process_text_input(message: types.Message, state: FSMContext, validation_func, current_state, next_state,
-                             prompt):
+async def process_text_input(message: types.Message, state: FSMContext, validation_func: callable, current_state,
+                             next_state, prompt: str) -> None:
     """
     Обрабатывает текстовый ввод пользователя и переходит к следующему состоянию в случае успешной валидации.
     :param message: Сообщение от пользователя.
@@ -44,7 +42,7 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
     await message.answer(prompt, reply_markup=get_step_keyboard())
 
 
-async def start_user_data_collection(message: types.Message, state: FSMContext):
+async def start_user_data_collection(message: types.Message, state: FSMContext) -> None:
     """
     Начинает собирать данные по клиенту.
     Если user_id уже есть в state, значит мы обновляем данные клиента.
@@ -60,33 +58,33 @@ async def start_user_data_collection(message: types.Message, state: FSMContext):
     await message.answer(f"Введите имя клиента (действие: {action}):", reply_markup=None)
 
 
-async def process_first_name(message: types.Message, state: FSMContext):
+async def process_first_name(message: types.Message, state: FSMContext) -> None:
     await process_text_input(message, state, validate_name, UserDataState.first_name, UserDataState.middle_name,
                              "Введите отчество клиента:")
 
 
-async def process_middle_name(message: types.Message, state: FSMContext):
+async def process_middle_name(message: types.Message, state: FSMContext) -> None:
     await process_text_input(message, state, validate_name, UserDataState.middle_name, UserDataState.last_name,
-                             "Введите Фамилию клиента:")
+                             "Введите фамилию клиента:")
 
 
-async def process_last_name(message: types.Message, state: FSMContext):
+async def process_last_name(message: types.Message, state: FSMContext) -> None:
     await process_text_input(message, state, validate_name, UserDataState.last_name, UserDataState.phone,
                              "Введите телефон клиента:")
 
 
-async def process_phone(message: types.Message, state: FSMContext):
+async def process_phone(message: types.Message, state: FSMContext) -> None:
     await process_text_input(message, state, validate_phone, UserDataState.phone, UserDataState.email,
                              "Введите почту клиента:")
 
 
-async def process_email(message: types.Message, state: FSMContext):
+async def process_email(message: types.Message, state: FSMContext) -> None:
     await process_text_input(message, state, validate_email, UserDataState.email, UserDataState.time_insure_end,
-                             "Введите время окончания полиса в формате дд.мм.гггг:")
+                             "Введите дату окончания полиса в формате дд.мм.гггг:")
 
 
-async def process_time_insure_end(message: types.Message, state: FSMContext):
-    await UserDataState.set_previous(state, UserDataState.time_insure_end.state)
+async def process_time_insure_end(message: types.Message, state: FSMContext) -> None:
+    await UserDataState.set_client_previous(state, UserDataState.time_insure_end.state)
 
     valid, result = validate_date(message.text)
     if not valid:
@@ -102,27 +100,26 @@ async def process_time_insure_end(message: types.Message, state: FSMContext):
     await UserDataState.polis_type.set()
 
 
-async def process_polis_type(callback_query: types.CallbackQuery, state: FSMContext):
-    await UserDataState.set_previous(state, UserDataState.polis_type.state)
+async def process_polis_type(callback_query: types.CallbackQuery, state: FSMContext) -> None:
+    await UserDataState.set_client_previous(state, UserDataState.polis_type.state)
     polis_type_key = callback_query.data
     polis_type = InsuranceInfoEnum[polis_type_key]
 
     await state.update_data(polis_type=polis_type_key)
     await bot.answer_callback_query(callback_query.id)
-    await callback_query.message.edit_text(
-        f"Вы выбрали тип полиса: {polis_type.value}\nВведите какие-либо важные данные по полису"
-    )
+    await callback_query.message.edit_text(f"Вы выбрали тип полиса: "
+                                           f"{polis_type.value}\nВведите какие-либо важные данные по полису")
     await UserDataState.process_description.set()
 
 
-async def process_description(message: types.Message, state: FSMContext):
+async def process_description(message: types.Message, state: FSMContext) -> None:
     await state.update_data(description=message.text)
     await finish_user_data_collection(message, state)
 
 
-async def finish_user_data_collection(message: types.Message, state: FSMContext):
+async def finish_user_data_collection(message: types.Message, state: FSMContext) -> None:
     """
-     Сбор всей информации в json и отправка на роут POST или PUT запроса.
+    Сбор всей информации в json и отправка на роут POST или PUT запроса.
     """
     data = await state.get_data()
     json_data = {
@@ -152,25 +149,25 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
             await message.answer("Данные успешно обработаны.")
             await state.finish()
             await Title.start_action.set()
-            markup = get_main_menu_keyboard()
+            markup = await create_main_menu()
             await message.answer("Выберите действие:", reply_markup=markup)
         else:
             await message.answer(f"Произошла ошибка: {response.text}")
             await state.set_data({})
             await Title.user_action.set()
-            markup = get_client_action_keyboard()
+            markup = await create_client_menu()
             await message.answer("Выберите действие:", reply_markup=markup)
 
 
-async def process_back_wrapper(message: types.Message, state: FSMContext):
+async def process_back_wrapper(message: types.Message, state: FSMContext) -> None:
     await process_back(message, state, UserDataState)
 
 
-async def find_user_fio(message: types.Message, state: FSMContext):
+async def find_user_fio(message: types.Message, state: FSMContext) -> None:
     fio = message.text
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{API_URL}/users/users/get_all/",
-                                    params={"search_query": fio, "page": 1, "size": 10})
+        response = await client.get(f"{API_URL}/users/users/get_all/", params={"search_query": fio,
+                                                                                   "page": 1, "size": 10})
         if response.status_code == 200:
             data = response.json()
             users = data.get('users', [])
@@ -190,5 +187,5 @@ async def find_user_fio(message: types.Message, state: FSMContext):
             await message.answer("Произошла ошибка при получении отчета.")
     await state.finish()
     await Title.start_action.set()
-    markup = get_main_menu_keyboard()
+    markup = await create_main_menu()
     await message.answer("Выберите действие:", reply_markup=markup)
