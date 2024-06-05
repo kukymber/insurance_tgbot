@@ -1,6 +1,7 @@
 from aiogram import Dispatcher
 
 from src.core.state_manger import process_callback, go_back
+from src.telegram.start import process_action, process_client_action, start_bot
 from src.telegram.states.client.client_state import UserDataState
 from src.telegram.states.title import Title
 from src.telegram.users.client_action import (
@@ -11,9 +12,9 @@ from src.telegram.users.client_action import (
 )
 
 
-def register_handlers(dp: Dispatcher):
-    dp.register_message_handler(process_back_wrapper, lambda message: message.text.lower() == "предыдущий шаг",
-                                state="*")
+def register_handlers(dp: Dispatcher) -> None:
+    dp.register_message_handler(process_back_wrapper,
+                                lambda message: message.text.lower() == "предыдущий шаг", state="*")
     dp.register_message_handler(start_user_data_collection,
                                 lambda message: message.text.lower() in ["создать", "обновить"], state="*")
     dp.register_message_handler(process_first_name, state=UserDataState.first_name)
@@ -27,4 +28,7 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(process_user_id, state=UserDataState.user_id)
     dp.register_message_handler(find_user_fio, state=Title.find_user)
     dp.register_callback_query_handler(process_callback)
-    dp.register_callback_query_handler(go_back, lambda c: c.data == 'back')
+    dp.register_callback_query_handler(go_back, lambda c: c.data == 'Назад')
+    dp.register_callback_query_handler(start_bot, lambda c: c.data == 'start')
+    dp.register_message_handler(process_action, state=Title.start_action)
+    dp.register_message_handler(process_client_action, state=Title.user_action)
