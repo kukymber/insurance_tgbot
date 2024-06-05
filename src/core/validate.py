@@ -12,7 +12,7 @@ class InsuranceInfoEnum(Enum):
 
 def validate_name(name: str):
     if not re.fullmatch(r'[А-Яа-яЁёA-Za-z]+', name):
-        return False, "Имя должно содержать только буквы и не содержать пробелов."
+        return False, "ФИО должно содержать только буквы и не содержать пробелов."
     return True, name.strip()
 
 

@@ -8,8 +8,6 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from dotenv import load_dotenv
 
-
-
 load_dotenv()
 TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID")
 TELEGRAM_TOKEN: str = os.getenv('TELEGRAM_TOKEN')
@@ -24,6 +22,8 @@ storage = MemoryStorage()
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher(bot, storage=storage)
 dp.middleware.setup(LoggingMiddleware())
+
+user_state = {}
 
 
 def start_bot():
