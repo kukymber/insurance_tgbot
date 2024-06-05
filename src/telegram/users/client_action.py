@@ -51,11 +51,11 @@ async def start_user_data_collection(message: types.Message, state: FSMContext) 
     data = await state.get_data()
     user_id = data.get('user_id')
 
-    action = 'обновить' if user_id else 'создать'
+    action = 'edit' if user_id else 'create'
     await state.update_data(action=action)
 
     await UserDataState.first_name.set()
-    await message.answer(f"Введите имя клиента (действие: {action}):", reply_markup=None)
+    await message.answer(f"Введите имя клиента (действие: {('Создать' if action == 'create' else 'Обновить')}):", reply_markup=None)
 
 
 async def process_first_name(message: types.Message, state: FSMContext) -> None:
