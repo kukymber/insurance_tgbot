@@ -17,7 +17,7 @@ async def process_callback(callback_query: types.CallbackQuery):
 
     if data in state_function_map:
         await switch_state(user_id, data, callback_query.message)
-    elif data == 'back':
+    elif data == 'Назад':
         await go_back(callback_query)
     else:
         await callback_query.answer(f"Вы выбрали: {data}")
