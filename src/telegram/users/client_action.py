@@ -3,13 +3,12 @@ from datetime import datetime
 import httpx
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, callback_query
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import API_URL, bot
 from src.core.general_button import get_step_keyboard, process_back
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard
-from src.telegram.start import cmd_start
 from src.telegram.states.client.client_state import UserDataState
 from src.telegram.states.title import Title
 
@@ -35,7 +34,7 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
         await message.answer(result + " Попробуйте еще раз.")
         return
     state_str = current_state.state if hasattr(current_state, 'state') else str(current_state)
-    await UserDataState.set_previous(state, state_str)
+    await UserDataState.set_client_previous(state, state_str)
 
     key_for_data = state_str.split(':')[1]
     await state.update_data({key_for_data: result})
@@ -193,22 +192,3 @@ async def find_user_fio(message: types.Message, state: FSMContext):
     markup = get_main_menu_keyboard()
     await message.answer("Выберите действие:", reply_markup=markup)
 
-
-def register_user_actions_handlers(dp: Dispatcher):
-    """
-      Регистрация обработчиков
-      """
-    dp.register_message_handler(process_back_wrapper, lambda message: message.text.lower() == "Пердыдуший шаг",
-                                state="*")
-    dp.register_message_handler(start_user_data_collection,
-                                lambda message: message.text.lower() in ["создать", "обновить"], state="*")
-    dp.register_message_handler(process_first_name, state=UserDataState.first_name)
-    dp.register_message_handler(process_middle_name, state=UserDataState.middle_name)
-    dp.register_message_handler(process_last_name, state=UserDataState.last_name)
-    dp.register_message_handler(process_phone, state=UserDataState.phone)
-    dp.register_message_handler(process_email, state=UserDataState.email)
-    dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
-    dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
-    dp.register_message_handler(process_description, state=UserDataState.process_description)
-    dp.register_message_handler(process_user_id, state=UserDataState.user_id)
-    dp.register_message_handler(find_user_fio, state=Title.find_user)

@@ -69,10 +69,4 @@ async def process_ids_for_extension(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-def register_report_handlers(dp: Dispatcher):
-    from src.telegram.head import Title
-    dp.register_message_handler(start_report, state=ReportData.report_action)
-    dp.register_message_handler(process_action, lambda message: message.text.lower() in
-                                                                ["выбрать период", "отметить продленные"], state="*")
-    dp.register_message_handler(process_period, state=ReportData.input_period)
-    dp.register_message_handler(process_client_action, state=ReportData.input_ids_for_extension)
+
