@@ -17,12 +17,12 @@ class UserDataState(StatesGroup):
     process_description = State()
 
     @classmethod
-    async def set_previous(cls, state: FSMContext, previous_state):
+    async def set_client_previous(cls, state: FSMContext, previous_client_state):
         """
         Сохраняем предыдущее состояние в контексте пользователя.
         """
         async with state.proxy() as data:
-            data['previous_state'] = previous_state
+            data['previous_client_state'] = previous_client_state
 
     @classmethod
     async def go_back(cls, state: FSMContext):
