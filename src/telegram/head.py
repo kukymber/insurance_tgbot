@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import bot, TELEGRAM_CHAT_ID
-from src.core.general_button import go_back_state
+from src.core.back_functions import go_back_state
 from src.telegram.buttons.button import get_client_action_keyboard, get_report_action_keyboard
 from src.telegram.start import cmd_start
 from src.telegram.states.title import Title

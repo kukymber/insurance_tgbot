@@ -6,7 +6,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.engine import API_URL, bot
-from src.core.general_button import get_step_keyboard, process_back
+from src.telegram.buttons.button import get_step_keyboard, process_back
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 from src.telegram.buttons.button import get_main_menu_keyboard, get_client_action_keyboard
 from src.telegram.states.client.client_state import UserDataState

@@ -1,6 +1,6 @@
 from aiogram import Dispatcher
 
-from src.core.general_button import go_back_state
+from src.core.back_functions import go_back_state
 from src.telegram.head import start_callback_handler, process_action, process_client_action
 from src.telegram.start import cmd_start
 from src.telegram.states.title import Title
