@@ -29,5 +29,5 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
-    dp.register_message_handler(process_user_id, state=UserDataState.user_id)
+    dp.register_message_handler(process_user_id,lambda c: c.data == 'find', state=UserDataState)
 
