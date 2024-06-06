@@ -28,7 +28,7 @@ class UserDataState(StatesGroup):
     async def go_back(cls, state: FSMContext):
         data = await state.get_data()
         if data:
-            key_to_remove = data['previous_state'].split(':')[1]
+            key_to_remove = data['previous_client_state'].split(':')[1]
 
             input_text = data.pop(key_to_remove, None)
 
