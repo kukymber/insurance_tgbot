@@ -17,10 +17,10 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(cmd_start, lambda c: c.data == 'start')
     dp.register_callback_query_handler(client_menu, lambda c: c.data == 'client_menu', state=Title.start_action)
     dp.register_callback_query_handler(report_menu, lambda c: c.data == 'report_menu', state=Title.start_action)
-    dp.register_message_handler(process_back_wrapper,
-                                lambda message: message.text.lower() == "предыдущий шаг", state=UserDataState)
+    dp.register_callback_query_handler(process_back_wrapper,
+                                lambda c: c.data == "предыдущий шаг", state=UserDataState)
     dp.register_callback_query_handler(start_user_data_collection,
-                                       lambda c: c.data in ["создать", "обновить"], state=Title.user_action)
+                                       lambda c: c.data in ["create", "edit"], state=Title.user_action)
     dp.register_message_handler(process_first_name, state=UserDataState.first_name)
     dp.register_message_handler(process_middle_name, state=UserDataState.middle_name)
     dp.register_message_handler(process_last_name, state=UserDataState.last_name)
@@ -28,3 +28,6 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(process_email, state=UserDataState.email)
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
+    dp.register_message_handler(process_description, state=UserDataState.process_description)
+    dp.register_message_handler(process_user_id, state=UserDataState.user_id)
+
