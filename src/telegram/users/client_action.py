@@ -5,7 +5,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.back_functions import process_back
-from src.core.engine import API_URL, bot
+from src.core.engine import API_URL, bot, check_server_status, server_check_decorator
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 from src.telegram.keyboards.keyboards import create_main_menu, create_client_menu, get_step_keyboard
 from src.telegram.states.client.client_state import UserDataState
@@ -42,7 +42,7 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
     await message.answer(prompt, reply_markup=get_step_keyboard())
 
 
-async def start_user_data_collection(message: types.Message, state: FSMContext) -> None:
+async def start_user_data_collection(callback_query: types.CallbackQuery, state: FSMContext) -> None:
     """
     Начинает собирать данные по клиенту.
     Если user_id уже есть в state, значит мы обновляем данные клиента.
@@ -55,7 +55,8 @@ async def start_user_data_collection(message: types.Message, state: FSMContext) 
     await state.update_data(action=action)
 
     await UserDataState.first_name.set()
-    await message.answer(f"Введите имя клиента (действие: {('Создать' if action == 'create' else 'Обновить')}):", reply_markup=None)
+    await callback_query.message.edit_text(
+        f"Введите имя клиента (действие: {('Создать' if action == 'create' else 'Обновить')}):", reply_markup=None)
 
 
 async def process_first_name(message: types.Message, state: FSMContext) -> None:
@@ -116,7 +117,7 @@ async def process_description(message: types.Message, state: FSMContext) -> None
     await state.update_data(description=message.text)
     await finish_user_data_collection(message, state)
 
-
+@server_check_decorator
 async def finish_user_data_collection(message: types.Message, state: FSMContext) -> None:
     """
     Сбор всей информации в json и отправка на роут POST или PUT запроса.
@@ -133,12 +134,11 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
         "description": data['description'],
         "polis_type": data['polis_type'],
     }
-
     async with httpx.AsyncClient() as client:
-        if data['action'] == 'создать':
+        if data['action'] == 'create':
             url = f"{API_URL}/users/create"
             request = client.post
-        elif data['action'] == 'обновить':
+        elif data['action'] == 'edit':
             url = f"{API_URL}/users/{data.get('user_id')}"
             request = client.put
         else:
@@ -159,15 +159,17 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
             await message.answer("Выберите действие:", reply_markup=markup)
 
 
+
 async def process_back_wrapper(message: types.Message, state: FSMContext) -> None:
     await process_back(message, state, UserDataState)
 
 
+@server_check_decorator
 async def find_user_fio(message: types.Message, state: FSMContext) -> None:
     fio = message.text
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{API_URL}/users/users/get_all/", params={"search_query": fio,
-                                                                                   "page": 1, "size": 10})
+                                                                               "page": 1, "size": 10})
         if response.status_code == 200:
             data = response.json()
             users = data.get('users', [])
