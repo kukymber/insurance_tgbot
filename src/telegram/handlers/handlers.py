@@ -18,9 +18,9 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(report_menu, lambda c: c.data == 'report_menu', state=Title.start_action)
     dp.register_callback_query_handler(start_user_data_collection, lambda c: c.data == 'create',
                                        state=Title.user_action)
+    dp.register_message_handler(process_user_id, lambda c: c.data == 'edit', state=Title.user_action)
     dp.register_callback_query_handler(UserDataState.go_back, lambda c: c.data == "предыдущий шаг", state=UserDataState)
 
-    dp.register_message_handler(process_user_id, lambda c: c.data == 'edit', state=Title.user_action)
     dp.register_message_handler(process_first_name, state=UserDataState.first_name)
     dp.register_message_handler(process_middle_name, state=UserDataState.middle_name)
     dp.register_message_handler(process_last_name, state=UserDataState.last_name)
@@ -29,4 +29,4 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(process_time_insure_end, state=UserDataState.time_insure_end)
     dp.register_callback_query_handler(process_polis_type, state=UserDataState.polis_type)
     dp.register_message_handler(process_description, state=UserDataState.process_description)
-    dp.register_callback_query_handler(process_callback, state='*', )
+    dp.register_callback_query_handler(process_callback, lambda c: c.data == 'back', state='*')
