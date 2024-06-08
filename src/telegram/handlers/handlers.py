@@ -21,6 +21,8 @@ def register_handlers(dp: Dispatcher) -> None:
                                 lambda c: c.data == "предыдущий шаг", state=UserDataState)
     dp.register_callback_query_handler(start_user_data_collection,
                                        lambda c: c.data in ["create", "edit"], state=Title.user_action)
+    dp.register_callback_query_handler(main_menu, lambda c: c.data == 'main_menu', state='*')
+
     dp.register_message_handler(process_first_name, state=UserDataState.first_name)
     dp.register_message_handler(process_middle_name, state=UserDataState.middle_name)
     dp.register_message_handler(process_last_name, state=UserDataState.last_name)
