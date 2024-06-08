@@ -42,15 +42,16 @@ async def go_back(callback_query: types.CallbackQuery):
     if user_id in user_state and user_state[user_id]:
         user_state[user_id].pop()
         if user_state[user_id]:
-            previous_state = user_state[user_id][-1]
-            markup = state_function_map[previous_state]()
-            await callback_query.message.bot.send_message(chat_id=callback_query.message.chat.id,
-                                                          text="Выберите действие:", reply_markup=markup)
-        else:
-            markup = state_function_map['main_menu']()
-            await callback_query.message.bot.send_message(chat_id=callback_query.message.chat.id,
-                                                          text="Вы вернулись в главное меню.", reply_markup=markup)
-            await Title.start_action.set()
+            if len(user_state[user_id]) > 1:
+                previous_state = user_state[user_id][len(user_state[user_id])-1]
+                markup = state_function_map[previous_state]()
+                await callback_query.message.bot.send_message(chat_id=callback_query.message.chat.id,
+                                                              text="Выберите действие:", reply_markup=markup)
+            else:
+                markup = state_function_map['main_menu']()
+                await callback_query.message.bot.send_message(chat_id=callback_query.message.chat.id,
+                                                              text="Вы вернулись в главное меню.", reply_markup=markup)
+                await Title.start_action.set()
     else:
         markup = state_function_map['main_menu']()
         await callback_query.message.bot.send_message(chat_id=callback_query.message.chat.id,
