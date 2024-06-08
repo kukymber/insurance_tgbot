@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
-from src.core.engine import TELEGRAM_CHAT_ID, bot
+from src.core.engine import bot
 from src.telegram.keyboards.keyboards import create_main_menu
 from src.telegram.states.title import Title
 
@@ -47,8 +47,8 @@ class UserDataState(StatesGroup):
                     await state.finish()
             else:
                 await state.finish()
-                await bot.send_message(chat_id=callback_query.from_user.id, text="Вы вернулись в главное меню.")
-                await Title.start_action.set()
                 markup = create_main_menu()
-                await callback_query.message.edit_text("Выберите действие:", reply_markup=markup)
-        await bot.answer_callback_query(callback_query.id)
+                await bot.send_message(chat_id=callback_query.from_user.id, text="Вы вернулись в главное меню.",
+                                       reply_markup=markup)
+                await Title.start_action.set()
+        await callback_query.answer()
