@@ -33,7 +33,7 @@ async def create_report_menu() -> InlineKeyboardMarkup:
     """
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton("Отчет за период", callback_data='period_report'))
-    keyboard.add(InlineKeyboardButton("Отметить продление", callback_data='renew_report'))
+    keyboard.add(InlineKeyboardButton("Отметить продление", callback_data='mark_extend'))
     keyboard.add(InlineKeyboardButton("Назад", callback_data='back'))
     keyboard.add(InlineKeyboardButton("Главное меню", callback_data='main_menu'))
     return keyboard

@@ -10,5 +10,6 @@ class SearchForm(StatesGroup):
 
 class ReportData(StatesGroup):
     report_action = State()
-    input_period = State()
-    input_ids_for_extension = State()
+
+    report_period = State()
+    mark_extend = State()
