@@ -188,7 +188,7 @@ async def process_find_user(callback_query: types.CallbackQuery) -> None:
 async def find_user_fio(message: types.Message, state: FSMContext) -> None:
     fio = message.text
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{API_URL}/users/users/get_all/",
+        response = await client.get(f"{API_URL}/users/users/get_all",
                                     params={"search_query": fio, "page": 1, "size": 10})
         if response.status_code == 200:
             data = response.json()
