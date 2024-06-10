@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Union
+
 import httpx
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -11,6 +13,12 @@ from src.core.validate import validate_name, validate_phone, validate_email, val
 from src.telegram.keyboards.keyboards import create_main_menu, create_client_menu, get_step_keyboard
 from src.telegram.states.client.client_state import UserDataState
 from src.telegram.states.title import Title
+
+
+async def edit_client(callback_query: types.CallbackQuery) -> None:
+    await UserDataState.user_id.set()
+    await callback_query.message.edit_text(
+        f"Введите id клиента:", reply_markup=None)
 
 
 async def process_user_id(message: types.Message, state: FSMContext) -> None:
@@ -43,12 +51,14 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
     await message.answer(prompt, reply_markup=get_step_keyboard())
 
 
-async def start_user_data_collection(callback_query: types.CallbackQuery, state: FSMContext) -> None:
+async def start_user_data_collection(message_or_callback_query: Union[types.Message, types.CallbackQuery],
+                                     state: FSMContext) -> None:
     """
     Начинает собирать данные по клиенту.
     Если user_id уже есть в state, значит мы обновляем данные клиента.
     В противном случае - создаем нового клиента.
     """
+
     data = await state.get_data()
     user_id = data.get('user_id')
 
@@ -56,8 +66,11 @@ async def start_user_data_collection(callback_query: types.CallbackQuery, state:
     await state.update_data(action=action)
 
     await UserDataState.first_name.set()
-    await callback_query.message.edit_text(
-        f"Введите имя клиента (действие: {('Создать' if action == 'create' else 'Обновить')}):", reply_markup=None)
+    response_text = f"Введите имя клиента (действие: {('Создать' if action == 'create' else 'Обновить')}):"
+    if isinstance(message_or_callback_query, types.CallbackQuery):
+        await message_or_callback_query.message.edit_text(response_text, reply_markup=None)
+    else:
+        await message_or_callback_query.answer(response_text)
 
 
 async def process_first_name(message: types.Message, state: FSMContext) -> None:
@@ -118,6 +131,7 @@ async def process_description(message: types.Message, state: FSMContext) -> None
     await state.update_data(description=message.text)
     await finish_user_data_collection(message, state)
 
+
 @server_check_decorator
 async def finish_user_data_collection(message: types.Message, state: FSMContext) -> None:
     """
@@ -158,7 +172,6 @@ async def finish_user_data_collection(message: types.Message, state: FSMContext)
             await Title.user_action.set()
             markup = await create_client_menu()
             await message.answer("Выберите действие:", reply_markup=markup)
-
 
 
 async def process_back_wrapper(message: types.Message, state: FSMContext) -> None:
