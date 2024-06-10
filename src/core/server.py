@@ -11,7 +11,7 @@ load_dotenv()
 API_URL: str = os.getenv('API_URL')
 
 
-async def check_server_status():
+async def check_server_status() -> bool:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(f"{API_URL}/health")
