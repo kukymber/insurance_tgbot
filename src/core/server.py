@@ -49,5 +49,13 @@ async def format_date(date_str):
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
         return date_obj.strftime("%d.%m.%Y")
-    except ValueError:
+    except (ValueError, TypeError):
         return date_str
+
+
+insurance_type_map = {
+    "osago": "ОСАГО",
+    "mortgage": "Ипотека",
+    "selfinsurance": "Личное страхование",
+    "other": "Прочее"
+}

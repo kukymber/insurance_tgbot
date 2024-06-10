@@ -31,7 +31,7 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(UserDataState.go_back, lambda c: c.data == "предыдущий шаг", state=UserDataState)
 
     dp.register_message_handler(process_client_action, state=ReportData.mark_extend)
-    dp.register_callback_query_handler(process_period, state=ReportData.report_period)
+    dp.register_message_handler(process_period, state=ReportData.report_period)
 
     dp.register_message_handler(find_user_fio, state=UserDataState.input_fio)
     dp.register_message_handler(process_user_id, state=UserDataState.user_id)
