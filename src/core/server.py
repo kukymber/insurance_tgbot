@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from functools import wraps
 
 import httpx
@@ -37,8 +38,16 @@ def server_check_decorator(func):
             if message:
                 await message.answer("Сервер недоступен")
                 await Title.start_action.set()
-                markup = create_main_menu()
+                markup = await create_main_menu()
                 await message.answer("Выберите действие:", reply_markup=markup)
             return None
 
     return wrapper
+
+
+async def format_date(date_str):
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        return date_obj.strftime("%d.%m.%Y")
+    except ValueError:
+        return date_str
