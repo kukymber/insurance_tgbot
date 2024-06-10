@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-def create_main_menu() -> InlineKeyboardMarkup:
+async def create_main_menu() -> InlineKeyboardMarkup:
     """
     Создает главное меню с кнопками для перехода в меню клиента и меню отчетов.
     :return: InlineKeyboardMarkup
@@ -12,7 +12,7 @@ def create_main_menu() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def create_client_menu() -> InlineKeyboardMarkup:
+async def create_client_menu() -> InlineKeyboardMarkup:
     """
     Создает меню клиента с кнопками для создания, изменения, поиска данных, а также кнопками для перехода назад и в главное меню.
     :return: InlineKeyboardMarkup
@@ -26,7 +26,7 @@ def create_client_menu() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def create_report_menu() -> InlineKeyboardMarkup:
+async def create_report_menu() -> InlineKeyboardMarkup:
     """
     Создает меню отчетов с кнопками для создания отчета за период, отметки продления, а также кнопками для перехода назад и в главное меню.
     :return: InlineKeyboardMarkup
@@ -39,7 +39,7 @@ def create_report_menu() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def get_step_keyboard() -> InlineKeyboardMarkup:
+async def get_step_keyboard() -> InlineKeyboardMarkup:
     """
     Создает клавиатуру с кнопкой для перехода назад на предыдущий шаг.
     :return: InlineKeyboardMarkup

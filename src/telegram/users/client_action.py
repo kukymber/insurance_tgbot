@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from src.core.back_functions import process_back
 from src.core.engine import API_URL, bot
-from src.core.server import server_check_decorator
+from src.core.server import server_check_decorator, format_date
 from src.core.validate import validate_name, validate_phone, validate_email, validate_date, InsuranceInfoEnum
 from src.telegram.keyboards.keyboards import create_main_menu, create_client_menu, get_step_keyboard
 from src.telegram.states.client.client_state import UserDataState
@@ -48,7 +48,7 @@ async def process_text_input(message: types.Message, state: FSMContext, validati
     await state.update_data({key_for_data: result})
 
     await next_state.set()
-    await message.answer(prompt, reply_markup=get_step_keyboard())
+    await message.answer(prompt, reply_markup=await get_step_keyboard())
 
 
 async def start_user_data_collection(message_or_callback_query: Union[types.Message, types.CallbackQuery],
@@ -178,27 +178,50 @@ async def process_back_wrapper(message: types.Message, state: FSMContext) -> Non
     await process_back(message, state, UserDataState)
 
 
+async def process_find_user(callback_query: types.CallbackQuery) -> None:
+    await UserDataState.input_fio.set()
+    await callback_query.message.edit_text(
+        f"Введите ФИО клиента для поиска:", reply_markup=None)
+
+
 @server_check_decorator
 async def find_user_fio(message: types.Message, state: FSMContext) -> None:
     fio = message.text
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{API_URL}/users/users/get_all/", params={"search_query": fio,
-                                                                               "page": 1, "size": 10})
+        response = await client.get(f"{API_URL}/users/users/get_all/",
+                                    params={"search_query": fio, "page": 1, "size": 10})
         if response.status_code == 200:
             data = response.json()
             users = data.get('users', [])
             response_text = f"Данные для поиска '{fio}':\n"
             for user in users:
                 user_info = (
-                    f"Id: {user['id']}, "
+                    f"ID клиента: {user['id']}, "
                     f"Фамилия: {user['last_name']}, "
                     f"Имя: {user['first_name']}, "
                     f"Отчество: {user['middle_name']}, "
                     f"Телефон: {user['phone']}, "
-                    f"Почта: {user['email']}"
+                    f"Почта: {user['email']}\n"
                 )
-                response_text += user_info + "\n"
+                response_text += user_info
+
+                insurances = user.get('insurance', [])
+                if insurances:
+                    for insurance in insurances:
+                        formatted_date = await format_date(insurance['time_insure_end'])
+                        insurance_info = (
+                            f"ID Полиса: {insurance['id']}, "
+                            f"Описание: {insurance['description']}, "
+                            f"Дата окончания: {formatted_date}, "
+                            f"Тип полиса: {insurance['polis_type']}, "
+                            f"Продлен: {'Да' if insurance['polis_extended'] else 'Нет'}\n"
+                        )
+                        response_text += insurance_info
+                else:
+                    response_text += "  Полисов не найдено\n"
             await message.answer(response_text)
+        elif response.status_code == 404:
+            await message.answer("Данных по вашему запросу не найдено")
         else:
             await message.answer("Произошла ошибка при получении отчета.")
     await state.finish()

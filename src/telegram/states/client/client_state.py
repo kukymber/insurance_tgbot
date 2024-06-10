@@ -18,7 +18,7 @@ class UserDataState(StatesGroup):
     time_insure_end = State()
     polis_type = State()
     process_description = State()
-
+    input_fio = State()
     @classmethod
     async def set_client_previous(cls, state: FSMContext, previous_client_state):
         """
@@ -47,7 +47,7 @@ class UserDataState(StatesGroup):
                     await state.finish()
             else:
                 await state.finish()
-                markup = create_main_menu()
+                markup = await create_main_menu()
                 await bot.send_message(chat_id=callback_query.from_user.id, text="Вы вернулись в главное меню.",
                                        reply_markup=markup)
                 await Title.start_action.set()
