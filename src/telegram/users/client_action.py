@@ -216,7 +216,7 @@ async def find_user_fio(message: types.Message, state: FSMContext) -> None:
                             f"Тип полиса: {insurance['polis_type']}, "
                             f"Продлен: {'Да' if insurance['polis_extended'] else 'Нет'}\n"
                         )
-                        response_text += insurance_info
+                        response_text += insurance_info + "\n"
                 else:
                     response_text += "  Полисов не найдено\n"
             await message.answer(response_text)
